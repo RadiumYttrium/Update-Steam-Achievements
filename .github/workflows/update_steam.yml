@@ -1,0 +1,38 @@
+name: Update Steam Achievements
+
+# This controls when the action runs
+on:
+  # Runs automatically every 12 hours
+  schedule:
+    - cron: '0 */12 * * *'
+  
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  update-wiki:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Grab the files from your repository
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Setup a Python environment
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11' # Or whichever version you prefer
+
+      # 3. Install the required libraries
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # 4. Run the script and pass the secure secrets to it
+      - name: Run wiki update script
+        env:
+          WIKI_BOT_USERNAME: ${{ secrets.WIKI_BOT_USERNAME }}
+          WIKI_BOT_PASSWORD: ${{ secrets.WIKI_BOT_PASSWORD }}
+        run: python update_wiki.py
