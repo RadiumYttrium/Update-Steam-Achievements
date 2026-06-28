@@ -4,7 +4,6 @@ import json
 import os
 import datetime
 
-# 1. Fetch all credentials securely from GitHub Secrets
 bot_username = os.environ.get('WIKI_BOT_USERNAME')
 bot_password = os.environ.get('WIKI_BOT_PASSWORD')
 steam_api_key = os.environ.get('STEAM_API_KEY')
@@ -12,8 +11,6 @@ steam_api_key = os.environ.get('STEAM_API_KEY')
 if not bot_username or not bot_password or not steam_api_key:
     raise ValueError("Missing wiki credentials or Steam API key in environment variables!")
 
-# 2. Fetch the Master Schema (Requires API Key)
-# This gets EVERY valid achievement for Dragonwilds, ensuring none are ever missing.
 schema_url = f"https://api.steampowered.com/ISteamUserStats/GetSchemaForGame/v2/?key={steam_api_key}&appid=1374490"
 schema_req = requests.get(schema_url)
 schema_data = schema_req.json()
@@ -42,6 +39,6 @@ dynamic_summary = f"Automated update of Steam achievement stats on {current_date
 
 if page.text() != page_content:
     page.edit(page_content, summary=dynamic_summary)
-    print(f"Wiki page updated successfully with summary: {dynamic_summary}")
+    print(dynamic_summary)
 else:
     print("No changes detected. Skipping edit.")
