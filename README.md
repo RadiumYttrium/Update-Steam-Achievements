@@ -7,7 +7,7 @@ This repository automates the process of pulling live global completion percenta
 This formats all percentages to a float and pushes the resulting to Module:FetchSteamAchivements/data.json on the wiki.
 
 # Automated Schedule
-This pipeline is automated via (.github/workflows/update_steam.yml)
+This pipeline is automated via (`.github/workflows/update_steam.yml`)
 
 * Runs every 12 hours (in UTC) via cron.
 * Can be triggered via Workflow Dispatch.
