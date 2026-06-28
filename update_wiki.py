@@ -4,22 +4,34 @@ import json
 import os
 import datetime
 
-url = "https://api.steampowered.com/ISteamUserStats/GetGlobalAchievementPercentagesForApp/v0002/?gameid=1374490&format=json"
-steam_req = requests.get(url)
-steam_data = steam_req.json()
-
-clean_data = {}
-for ach in steam_data['achievementpercentages']['achievements']:
-    clean_data[ach['name']] = round(float(ach['percent']), 1)
-
-site = mwclient.Site('dragonwilds.runescape.wiki', path='/')
-
+# 1. Fetch all credentials securely from GitHub Secrets
 bot_username = os.environ.get('WIKI_BOT_USERNAME')
 bot_password = os.environ.get('WIKI_BOT_PASSWORD')
+steam_api_key = os.environ.get('STEAM_API_KEY')
 
-if not bot_username or not bot_password:
-    raise ValueError("Missing wiki credentials in environment variables!")
+if not bot_username or not bot_password or not steam_api_key:
+    raise ValueError("Missing wiki credentials or Steam API key in environment variables!")
 
+# 2. Fetch the Master Schema (Requires API Key)
+# This gets EVERY valid achievement for Dragonwilds, ensuring none are ever missing.
+schema_url = f"https://api.steampowered.com/ISteamUserStats/GetSchemaForGame/v2/?key={steam_api_key}&appid=1374490"
+schema_req = requests.get(schema_url)
+schema_data = schema_req.json()
+
+clean_data = {}
+if 'game' in schema_data and 'availableGameStats' in schema_data['game']:
+    for ach in schema_data['game']['availableGameStats'].get('achievements', []):
+        clean_data[ach['name']] = 0.0
+
+percent_url = "https://api.steampowered.com/ISteamUserStats/GetGlobalAchievementPercentagesForApp/v0002/?gameid=1374490&format=json"
+percent_req = requests.get(percent_url)
+percent_data = percent_req.json()
+
+for ach in percent_data['achievementpercentages']['achievements']:
+    if ach['name'] in clean_data:
+        clean_data[ach['name']] = round(float(ach['percent']), 1)
+
+site = mwclient.Site('dragonwilds.runescape.wiki', path='/')
 site.login(bot_username, bot_password)
 
 page = site.pages['Module:FetchSteamAchievements/data.json']
@@ -30,6 +42,6 @@ dynamic_summary = f"Automated update of Steam achievement stats on {current_date
 
 if page.text() != page_content:
     page.edit(page_content, summary=dynamic_summary)
-    print(dynamic_summary)
+    print(f"Wiki page updated successfully with summary: {dynamic_summary}")
 else:
     print("No changes detected. Skipping edit.")
